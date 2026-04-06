@@ -80,7 +80,7 @@ function insight_cross_question(array $questions, PDO $db, int $submission_count
             }
 
             foreach ($count_a as $va => $n_a) {
-                if ($n_a < 5) continue;
+                if ($n_a < 3) continue;
 
                 foreach (($count_ab[$va] ?? []) as $vb => $n_ab) {
                     $conditional = $n_ab / $n_a;
