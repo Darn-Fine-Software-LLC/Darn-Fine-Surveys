@@ -27,8 +27,8 @@ if (!in_array($expiration_length, $allowed_days, true)) {
 }
 
 // --- Validate questions ---
-$valid_types = ['radio', 'checkbox', 'select', 'text_short', 'text_long'];
-$choice_types = ['radio', 'checkbox', 'select'];
+$valid_types = ['pick_one', 'checkbox', 'text_short', 'text_long'];
+$choice_types = ['checkbox', 'pick_one', 'radio', 'select'];
 
 if (!is_array($questions_raw) || count($questions_raw) === 0) {
     $errors[] = 'At least one question is required.';
@@ -95,6 +95,8 @@ foreach ($questions_raw as $sort_order => $q) {
     $description = trim($q['description'] ?? '') ?: null;
     $type        = $q['type'];
     $is_required = isset($q['required']) && $q['required'] ? 1 : 0;
+
+    if ($type == 'pick_one') $type = count($q['choices']) > 3 ? 'select' : 'radio';
 
     $stmt = $db->prepare(
         'INSERT INTO questions (survey_id, label, description, type, is_required, sort_order)

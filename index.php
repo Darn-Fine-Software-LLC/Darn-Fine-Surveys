@@ -95,11 +95,10 @@ if (file_exists($db_path)) {
 						<div class="field">
 							<label>Type</label>
 							<select :name="'questions[' + qi + '][type]'" x-model="question.type">
-								<option value="radio">Radio — pick one</option>
-								<option value="checkbox">Checkbox — pick many</option>
-								<option value="select">Dropdown — pick one</option>
-								<option value="text_short">Short text (255 chars)</option>
-								<option value="text_long">Long text (1000 chars)</option>
+								<option value="pick_one">Pick One</option>
+								<option value="checkbox">Pick Many</option>
+								<option value="text_short">Short Freeform Text</option>
+								<option value="text_long">Long Freeform Text</option>
 							</select>
 						</div>
 
@@ -160,7 +159,7 @@ if (file_exists($db_path)) {
 					this.questions.push({
 						label: '',
 						description: '',
-						type: 'radio',
+						type: 'pick_one',
 						required: false,
 						choices: ['', '']
 					});
@@ -179,7 +178,7 @@ if (file_exists($db_path)) {
 				},
 
 				needsChoices(type) {
-					return ['radio', 'checkbox', 'select'].includes(type);
+					return ['checkbox', 'pick_one'].includes(type);
 				},
 
 				prepareSubmit(e) {
