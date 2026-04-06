@@ -108,8 +108,10 @@ $generators[] = 'insight_cross_question';
 
 // ── Generator: Common terms in text answers ───────────────────────────────
 //
-// For each text question, finds the most-mentioned significant word.
-// Surfaces it if it appears in ≥40% of responses.
+// For each text question, counts unigrams and bigrams (both words must be
+// content words, adjacent in the original text). Candidates meeting ≥40%
+// are scored as count × word_count so "software center" (55% × 2 = 1.10)
+// naturally beats "software" (65% × 1 = 0.65).
 
 function insight_text_terms(array $questions, PDO $db, int $submission_count): array
 {
@@ -131,35 +133,63 @@ function insight_text_terms(array $questions, PDO $db, int $submission_count): a
         $answers = $q['text_answers'] ?? [];
         if (count($answers) < 5) continue;
 
-        $word_counts = [];
-        $total       = count($answers);
+        $ngram_counts = [];
+        $total        = count($answers);
 
         foreach ($answers as $answer) {
             // Tokenise: lowercase, strip punctuation, split on whitespace/hyphens
-            $words = preg_split('/[\s\-]+/', strtolower(preg_replace('/[^a-z0-9\s\-]/i', '', $answer)));
-            $seen  = [];
-            foreach ($words as $word) {
-                if (strlen($word) < 4) continue;
-                if (isset($stop_words[$word])) continue;
-                if (isset($seen[$word])) continue;
-                $seen[$word]           = true;
-                $word_counts[$word]    = ($word_counts[$word] ?? 0) + 1;
+            $tokens = array_values(array_filter(
+                preg_split('/[\s\-]+/', strtolower(preg_replace('/[^a-z0-9\s\-]/i', '', $answer))),
+                fn($w) => $w !== ''
+            ));
+            $seen = [];
+
+            // Unigrams: content words only (length ≥4, not a stop word)
+            foreach ($tokens as $word) {
+                if (strlen($word) < 4 || isset($stop_words[$word])) continue;
+                if (!isset($seen[$word])) {
+                    $seen[$word]          = true;
+                    $ngram_counts[$word]  = ($ngram_counts[$word] ?? 0) + 1;
+                }
+            }
+
+            // Bigrams: both adjacent tokens must be content words
+            for ($k = 0; $k + 1 < count($tokens); $k++) {
+                $w1 = $tokens[$k];
+                $w2 = $tokens[$k + 1];
+                if (strlen($w1) < 4 || isset($stop_words[$w1])) continue;
+                if (strlen($w2) < 4 || isset($stop_words[$w2])) continue;
+                $bigram = "$w1 $w2";
+                if (!isset($seen[$bigram])) {
+                    $seen[$bigram]          = true;
+                    $ngram_counts[$bigram]  = ($ngram_counts[$bigram] ?? 0) + 1;
+                }
             }
         }
 
-        if (empty($word_counts)) continue;
+        if (empty($ngram_counts)) continue;
 
-        arsort($word_counts);
-        $top_word  = array_key_first($word_counts);
-        $top_count = $word_counts[$top_word];
-        $pct       = $top_count / $total;
+        // Among candidates meeting ≥40%, prefer longer phrases via count × word_count
+        $best_ngram  = null;
+        $best_score  = 0;
+        $best_count  = 0;
 
-        if ($pct >= 0.40) {
-            $rounded_pct = round($pct * 100);
+        foreach ($ngram_counts as $ngram => $count) {
+            if ($count / $total < 0.40) continue;
+            $score = $count * (substr_count($ngram, ' ') + 1);
+            if ($score > $best_score) {
+                $best_score = $score;
+                $best_ngram = $ngram;
+                $best_count = $count;
+            }
+        }
+
+        if ($best_ngram !== null) {
+            $rounded_pct = round($best_count / $total * 100);
             $q_lbl       = $q['label'];
             $insights[]  = [
-                'text'  => "\"{$top_word}\" came up in {$rounded_pct}% of responses to \"{$q_lbl}\".",
-                'score' => $pct,
+                'text'  => "\"{$best_ngram}\" came up in {$rounded_pct}% of responses to \"{$q_lbl}\".",
+                'score' => $best_count / $total,
             ];
         }
     }
