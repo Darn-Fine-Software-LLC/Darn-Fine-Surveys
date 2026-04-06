@@ -86,5 +86,5 @@ foreach ($questions as $q) {
 $db->commit();
 
 $_SESSION['survey_submitted'] = true;
-header('Location: /surveys?id=' . urlencode($survey_id));
+header('Location: /surveys/done.php?id=' . urlencode($survey_id));
 exit;

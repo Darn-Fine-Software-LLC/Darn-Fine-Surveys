@@ -560,6 +560,69 @@
 			word-break: break-word;
 		}
 
+		/* ── Done page ── */
+		.done-body {
+			display: flex;
+			flex-direction: column;
+			min-height: 100vh;
+		}
+		#confetti-canvas {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			pointer-events: none;
+			z-index: 0;
+		}
+		.done-wrap {
+			flex: 1;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 2rem;
+			position: relative;
+			z-index: 1;
+		}
+		.done-card {
+			background: var(--surface);
+			border: 1.5px solid var(--border);
+			border-radius: var(--radius);
+			padding: 2.75rem 2.5rem 2.25rem;
+			text-align: center;
+			max-width: 380px;
+			width: 100%;
+			animation: done-card-in 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+		}
+		@keyframes done-card-in {
+			from { opacity: 0; transform: scale(0.88); }
+			to   { opacity: 1; transform: scale(1); }
+		}
+		.done-icon {
+			width: 52px;
+			height: 52px;
+			border-radius: 50%;
+			background: #fdf0eb;
+			border: 1.5px solid #f5c4ae;
+			color: var(--accent);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin: 0 auto 1.4rem;
+		}
+		.done-heading {
+			font-family: 'Noto Sans', sans-serif;
+			font-weight: 700;
+			font-size: 1.2rem;
+			line-height: 1.4;
+			margin-bottom: 1.75rem;
+			color: var(--text);
+		}
+		.done-btn {
+			width: 100%;
+			justify-content: center;
+		}
+
 		/* ── Footer ── */
 		.site-footer {
 			border-top: 1px solid var(--border);
