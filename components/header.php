@@ -32,6 +32,7 @@ $header_cta      = $header_cta      ?? false;
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
     <script src="//unpkg.com/alpinejs" defer></script>
     <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 </head>
 <body>
 
