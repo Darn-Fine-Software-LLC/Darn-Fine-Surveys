@@ -1,13 +1,25 @@
 	<?php
 $active_surveys  = 0;
 $total_responses = 0;
+$popular_surveys = [];
 $db_path = __DIR__ . '/database/database.sqlite';
 if (file_exists($db_path)) {
     try {
         $db = new PDO('sqlite:' . $db_path);
         $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        // Apply migration for show_on_home column (safe to re-run; fails silently if already exists)
+        try { $db->exec('ALTER TABLE surveys ADD COLUMN show_on_home INTEGER NOT NULL DEFAULT 0 CHECK(show_on_home IN (0,1))'); } catch (Exception $e) {}
         $active_surveys  = (int)$db->query('SELECT COUNT(*) FROM surveys WHERE expires_at > ' . time())->fetchColumn();
         $total_responses = (int)$db->query('SELECT COUNT(*) FROM submissions')->fetchColumn();
+        $popular_surveys = $db->query('
+            SELECT s.id, s.title,
+                   (SELECT COUNT(*) FROM questions q WHERE q.survey_id = s.id) AS question_count,
+                   (SELECT COUNT(*) FROM submissions sub WHERE sub.survey_id = s.id) AS response_count
+            FROM surveys s
+            WHERE s.expires_at > ' . time() . ' AND s.show_on_home = 1
+            ORDER BY response_count DESC
+            LIMIT 10
+        ')->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) { /* db not ready yet */ }
 }
 ?>
@@ -45,6 +57,29 @@ if (file_exists($db_path)) {
 			</div>
 		</div>
 
+		<?php if (!empty($popular_surveys)): ?>
+		<div class="popular-section">
+			<div class="popular-header">
+				<h2 class="popular-title">Popular Surveys</h2>
+				<div class="popular-nav">
+					<button class="btn btn-secondary" onclick="scrollPopular(-1)" aria-label="Scroll left">&#8592;</button>
+					<button class="btn btn-secondary" onclick="scrollPopular(1)" aria-label="Scroll right">&#8594;</button>
+				</div>
+			</div>
+			<div class="popular-scroll" id="popularScroll">
+				<?php foreach ($popular_surveys as $s): ?>
+				<a href="/surveys?id=<?= htmlspecialchars($s['id']) ?>" class="popular-card">
+					<div class="popular-card-title"><?= htmlspecialchars($s['title']) ?></div>
+					<div class="popular-card-stats">
+						<span class="popular-stat-responses"><?= (int)$s['response_count'] ?> respondent<?= $s['response_count'] != 1 ? 's' : '' ?></span>
+						<span><?= (int)$s['question_count'] ?> question<?= $s['question_count'] != 1 ? 's' : '' ?></span>
+					</div>
+				</a>
+				<?php endforeach; ?>
+			</div>
+		</div>
+		<?php endif; ?>
+
 		<div class="form-intro">
 			<h2>Create a Survey</h2>
 			<p>Fill in the details below and add your questions. You'll get a shareable link when you're done.</p>
@@ -64,6 +99,10 @@ if (file_exists($db_path)) {
 						<option value="7">1 Week</option>
 						<option value="31">1 Month</option>
 					</select>
+				</div>
+				<div class="field-check">
+					<input type="checkbox" id="show_on_home" name="show_on_home" value="1" />
+					<span>Share with the world? <br/><span class="hint" style="font-size: 0.75rem;font-weight:400;">Selecting this option means your survey could be featured on our site.</span></span>
 				</div>
 			</div>
 
@@ -151,6 +190,11 @@ if (file_exists($db_path)) {
 	</main>
 
 	<script>
+		function scrollPopular(dir) {
+			const el = document.getElementById('popularScroll');
+			if (el) el.scrollBy({ left: dir * 224, behavior: 'smooth' });
+		}
+
 		function surveyBuilder() {
 			return {
 				questions: [],

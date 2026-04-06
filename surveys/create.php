@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $title             = trim($_POST['title'] ?? '');
 $expiration_length = $_POST['expiration_length'] ?? '';
 $questions_raw     = $_POST['questions'] ?? [];
+$show_on_home      = isset($_POST['show_on_home']) && $_POST['show_on_home'] === '1' ? 1 : 0;
 
 $errors = [];
 
@@ -87,8 +88,8 @@ $expires_at = $now + ((int)$expiration_length * 86400);
 // --- Insert survey (transaction) ---
 $db->beginTransaction();
 
-$stmt = $db->prepare('INSERT INTO surveys (id, title, created_at, expires_at) VALUES (?, ?, ?, ?)');
-$stmt->execute([$id, $title, $now, $expires_at]);
+$stmt = $db->prepare('INSERT INTO surveys (id, title, created_at, expires_at, show_on_home) VALUES (?, ?, ?, ?, ?)');
+$stmt->execute([$id, $title, $now, $expires_at, $show_on_home]);
 
 foreach ($questions_raw as $sort_order => $q) {
     $label       = trim($q['label']);

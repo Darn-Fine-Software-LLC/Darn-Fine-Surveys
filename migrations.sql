@@ -1,8 +1,9 @@
 CREATE TABLE IF NOT EXISTS surveys (
-    id          TEXT    PRIMARY KEY,   -- random unique short ID
-    title       TEXT    NOT NULL,
-    created_at  INTEGER NOT NULL,      -- unix timestamp
-    expires_at  INTEGER NOT NULL       -- unix timestamp
+    id              TEXT    PRIMARY KEY,   -- random unique short ID
+    show_on_home    INTEGER NOT NULL DEFAULT 0 CHECK(show_on_home IN (0,1)),
+    title           TEXT    NOT NULL,
+    created_at      INTEGER NOT NULL,      -- unix timestamp
+    expires_at      INTEGER NOT NULL       -- unix timestamp
 );
 
 CREATE TABLE IF NOT EXISTS questions (
