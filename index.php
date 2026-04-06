@@ -1,4 +1,4 @@
-	<?php
+<?php
 $active_surveys  = 0;
 $total_responses = 0;
 $popular_surveys = [];
@@ -7,7 +7,6 @@ if (file_exists($db_path)) {
     try {
         $db = new PDO('sqlite:' . $db_path);
         $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        // Apply migration for show_on_home column (safe to re-run; fails silently if already exists)
         try { $db->exec('ALTER TABLE surveys ADD COLUMN show_on_home INTEGER NOT NULL DEFAULT 0 CHECK(show_on_home IN (0,1))'); } catch (Exception $e) {}
         $active_surveys  = (int)$db->query('SELECT COUNT(*) FROM surveys WHERE expires_at > ' . time())->fetchColumn();
         $total_responses = (int)$db->query('SELECT COUNT(*) FROM submissions')->fetchColumn();
@@ -23,225 +22,232 @@ if (file_exists($db_path)) {
     } catch (Exception $e) { /* db not ready yet */ }
 }
 ?>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Darn Fine Surveys — Create a Survey</title>
-	<meta name="description" content="Create a simple, no-Bull survey in seconds. Share the link, collect responses, results are public. Surveys auto-delete when they expire.">
-	<meta property="og:title" content="Darn Fine Surveys — Create a Survey">
-	<meta property="og:description" content="Create a simple, no-Bull survey in seconds. Share the link, collect responses, results are public. Surveys auto-delete when they expire.">
-	<meta property="og:type" content="website">
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-	<script src="//unpkg.com/alpinejs" defer></script>
-	<link rel="stylesheet" type="text/css" href="/css/style.css">
-</head>
-<body>
+<?php include __DIR__ . '/components/header.php'; ?>
 
-	<header class="site-header">
-		<h1>Surveys Without The Bull</h1>
-		<p>Couple of clicks, you have a survey. It expires. Results are public — don't ask for anything you'd hide from your neighbor.</p>
-	</header>
+<main>
+    <section class="hero">
+        <span class="hero-eyebrow">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
+            Surveys Without The Bull
+        </span>
+        <h1>Create a survey in<br><em>seconds</em></h1>
+        <p class="hero-subtitle">No account needed. Share the link. Collect responses. Surveys auto-delete when they expire. Results are always public.</p>
+        <div class="hero-actions">
+            <a href="#create" class="btn btn-primary btn-lg">Create Your Survey</a>
+            <?php if (!empty($popular_surveys)): ?>
+            <a href="#popular" class="btn btn-secondary btn-lg">Browse Surveys</a>
+            <?php endif; ?>
+        </div>
+    </section>
 
-	<main>
-		<div class="stats-row">
-			<div class="stat-card">
-				<span class="stat-number"><?= htmlspecialchars((string)$active_surveys) ?></span>
-				<span class="stat-label">Surveys Hapening Now</span>
-			</div>
-			<div class="stat-card">
-				<span class="stat-number"><?= htmlspecialchars((string)$total_responses) ?></span>
-				<span class="stat-label">People Responding to Surveys</span>
-			</div>
-		</div>
+    <div class="stats-row">
+        <div class="stat-card">
+            <span class="stat-number"><?= htmlspecialchars((string)$active_surveys) ?></span>
+            <span class="stat-label">Active Surveys</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number"><?= htmlspecialchars((string)$total_responses) ?></span>
+            <span class="stat-label">Total Responses</span>
+        </div>
+    </div>
 
-		<?php if (!empty($popular_surveys)): ?>
-		<div class="popular-section">
-			<div class="popular-header">
-				<h2 class="popular-title">Popular Surveys</h2>
-				<div class="popular-nav">
-					<button class="btn btn-secondary" onclick="scrollPopular(-1)" aria-label="Scroll left">&#8592;</button>
-					<button class="btn btn-secondary" onclick="scrollPopular(1)" aria-label="Scroll right">&#8594;</button>
-				</div>
-			</div>
-			<div class="popular-scroll" id="popularScroll">
-				<?php foreach ($popular_surveys as $s): ?>
-				<a href="/surveys?id=<?= htmlspecialchars($s['id']) ?>" class="popular-card">
-					<div class="popular-card-title"><?= htmlspecialchars($s['title']) ?></div>
-					<div class="popular-card-stats">
-						<span class="popular-stat-responses"><?= (int)$s['response_count'] ?> respondent<?= $s['response_count'] != 1 ? 's' : '' ?></span>
-						<span><?= (int)$s['question_count'] ?> question<?= $s['question_count'] != 1 ? 's' : '' ?></span>
-					</div>
-				</a>
-				<?php endforeach; ?>
-			</div>
-		</div>
-		<?php endif; ?>
+    <?php if (!empty($popular_surveys)): ?>
+    <section class="popular-section" id="popular">
+        <div class="section-header">
+            <h2 class="section-title">Popular Surveys</h2>
+            <div class="section-nav">
+                <button class="btn btn-secondary" onclick="scrollPopular(-1)" aria-label="Previous">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="btn btn-secondary" onclick="scrollPopular(1)" aria-label="Next">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="popular-scroll" id="popularScroll">
+            <?php foreach ($popular_surveys as $s): ?>
+            <a href="/surveys?id=<?= htmlspecialchars($s['id']) ?>" class="popular-card">
+                <div class="popular-card-title"><?= htmlspecialchars($s['title']) ?></div>
+                <div class="popular-card-meta">
+                    <span class="popular-meta-item">
+                        <span class="popular-meta-dot"></span>
+                        <?= (int)$s['response_count'] ?> <?= $s['response_count'] == 1 ? 'response' : 'responses' ?>
+                    </span>
+                    <span class="popular-meta-item">
+                        <?= (int)$s['question_count'] ?> <?= $s['question_count'] == 1 ? 'question' : 'questions' ?>
+                    </span>
+                </div>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
 
-		<div class="form-intro">
-			<h2>Create a Survey</h2>
-			<p>Fill in the details below and add your questions. You'll get a shareable link when you're done.</p>
-		</div>
+    <section id="create">
+        <div class="section-intro">
+            <h2>Create a Survey</h2>
+            <p>Fill in the details, add your questions, and share the link.</p>
+        </div>
 
-		<form action="/surveys/create.php" method="POST" x-data="surveyBuilder()" @submit="prepareSubmit">
+        <form action="/surveys/create.php" method="POST" x-data="surveyBuilder()" @submit="prepareSubmit">
 
-			<div class="form-card">
-				<div class="field">
-					<label for="title">Survey Title</label>
-					<input id="title" required type="text" name="title" placeholder="e.g. Team Lunch Preferences" />
-				</div>
-				<div class="field">
-					<label for="expiration">Expiration <span class="hint">(auto-deletes after this)</span></label>
-					<select id="expiration" required name="expiration_length">
-						<option value="1">1 Day</option>
-						<option value="7">1 Week</option>
-						<option value="31">1 Month</option>
-					</select>
-				</div>
-				<div class="field-check">
-					<input type="checkbox" id="show_on_home" name="show_on_home" value="1" />
-					<span>Share with the world? <br/><span class="hint" style="font-size: 0.75rem;font-weight:400;">Selecting this option means your survey could be featured on our site.</span></span>
-				</div>
-			</div>
+            <div class="form-card">
+                <div class="field">
+                    <label for="title">Survey Title</label>
+                    <input id="title" required type="text" name="title" placeholder="e.g. Team Lunch Preferences" maxlength="255">
+                </div>
+                <div class="field">
+                    <label for="expiration">Auto-delete after <span class="hint">(survey expires and is deleted)</span></label>
+                    <select id="expiration" required name="expiration_length">
+                        <option value="1">1 Day</option>
+                        <option value="7">1 Week</option>
+                        <option value="31">1 Month</option>
+                    </select>
+                </div>
+                <div class="field-check">
+                    <input type="checkbox" id="show_on_home" name="show_on_home" value="1">
+                    <span>Feature this survey publicly<br><span class="hint" style="font-size:0.75rem">Lets others discover your survey on the homepage</span></span>
+                </div>
+            </div>
 
-			<div id="survey-questions">
-				<template x-for="(question, qi) in questions" :key="qi">
-					<div class="question-block">
+            <div id="survey-questions">
+                <template x-for="(question, qi) in questions" :key="qi">
+                    <div class="question-block">
+                        <div class="question-header">
+                            <span class="question-number" x-text="'Question ' + (qi + 1)"></span>
+                            <button type="button" class="btn btn-ghost btn-sm" @click="removeQuestion(qi)">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                Remove
+                            </button>
+                        </div>
 
-						<div class="question-header">
-							<span class="question-number" x-text="'Question ' + (qi + 1)"></span>
-							<button type="button" class="btn btn-danger" @click="removeQuestion(qi)">Remove</button>
-						</div>
+                        <div class="field">
+                            <label>Question</label>
+                            <input required type="text"
+                                :name="'questions[' + qi + '][label]'"
+                                x-model="question.label"
+                                placeholder="e.g. What is your favorite color?">
+                        </div>
 
-						<div class="field">
-							<label>Label</label>
-							<input required type="text"
-								:name="'questions[' + qi + '][label]'"
-								x-model="question.label"
-								placeholder="e.g. What is your favorite color?" />
-						</div>
+                        <div class="field">
+                            <label>Description <span class="hint">(optional)</span></label>
+                            <input type="text"
+                                :name="'questions[' + qi + '][description]'"
+                                x-model="question.description"
+                                placeholder="Any extra context for this question">
+                        </div>
 
-						<div class="field">
-							<label>Description <span class="hint">(optional)</span></label>
-							<input type="text"
-								:name="'questions[' + qi + '][description]'"
-								x-model="question.description"
-								placeholder="Any extra context for this question" />
-						</div>
+                        <div class="field">
+                            <label>Answer Type</label>
+                            <select :name="'questions[' + qi + '][type]'" x-model="question.type">
+                                <option value="pick_one">Pick One</option>
+                                <option value="checkbox">Pick Multiple</option>
+                                <option value="text_short">Short Text</option>
+                                <option value="text_long">Long Text</option>
+                            </select>
+                        </div>
 
-						<div class="field">
-							<label>Type</label>
-							<select :name="'questions[' + qi + '][type]'" x-model="question.type">
-								<option value="pick_one">Pick One</option>
-								<option value="checkbox">Pick Many</option>
-								<option value="text_short">Short Freeform Text</option>
-								<option value="text_long">Long Freeform Text</option>
-							</select>
-						</div>
+                        <div class="field-check">
+                            <input type="checkbox"
+                                :name="'questions[' + qi + '][required]'"
+                                :id="'required_' + qi"
+                                value="1"
+                                x-model="question.required">
+                            <span>Required <span class="hint">(respondent must answer)</span></span>
+                        </div>
 
-						<div class="field-check">
-							<input type="checkbox"
-								:name="'questions[' + qi + '][required]'"
-								:id="'required_' + qi"
-								value="1"
-								x-model="question.required" />
-							<span>Required</span>
-						</div>
+                        <div class="choices-section" x-show="needsChoices(question.type)">
+                            <div class="choices-label">Answer Choices</div>
+                            <template x-for="(choice, ci) in question.choices" :key="ci">
+                                <div class="choice-row">
+                                    <input type="text"
+                                        :required="needsChoices(question.type)"
+                                        :name="'questions[' + qi + '][choices][' + ci + ']'"
+                                        x-model="question.choices[ci]"
+                                        :placeholder="'Choice ' + (ci + 1)">
+                                    <button type="button" class="btn btn-ghost"
+                                        @click="removeChoice(qi, ci)"
+                                        x-show="question.choices.length > 2"
+                                        title="Remove choice">
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                    </button>
+                                </div>
+                            </template>
+                            <button type="button" class="btn btn-ghost btn-sm" @click="addChoice(qi)" style="margin-top:0.5rem">
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                Add Choice
+                            </button>
+                        </div>
+                    </div>
+                </template>
 
-						<div class="choices-section" x-show="needsChoices(question.type)">
-							<div class="choices-label">Answer Choices</div>
-							<template x-for="(choice, ci) in question.choices" :key="ci">
-								<div class="choice-row">
-									<input type="text"
-										:required="needsChoices(question.type)"
-										:name="'questions[' + qi + '][choices][' + ci + ']'"
-										x-model="question.choices[ci]"
-										placeholder="Choice label" />
-									<button type="button" class="btn btn-ghost"
-										@click="removeChoice(qi, ci)"
-										x-show="question.choices.length > 2"
-										title="Remove choice">&times;</button>
-								</div>
-							</template>
-							<button type="button" class="btn btn-ghost" @click="addChoice(qi)">+ Add choice</button>
-						</div>
+                <div class="empty-state" x-show="questions.length === 0">
+                    No questions yet — add one below.
+                </div>
+            </div>
 
-					</div>
-				</template>
+            <div class="add-question-row">
+                <button type="button" class="btn btn-secondary" @click="addQuestion()">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Add Question
+                </button>
+            </div>
 
-				<div class="empty-state" x-show="questions.length === 0">
-					No questions yet — add one below.
-				</div>
-			</div>
+            <div class="submit-row">
+                <button type="submit" class="btn btn-primary btn-lg" :disabled="questions.length === 0">
+                    Create Survey
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </div>
 
-			<div class="add-question-row">
-				<button type="button" class="btn btn-secondary" @click="addQuestion()">+ Add Question</button>
-			</div>
+        </form>
+    </section>
+</main>
 
-			<div class="submit-row">
-				<button type="submit" class="btn btn-primary" :disabled="questions.length === 0">
-					Create Survey &rarr;
-				</button>
-			</div>
+<script>
+    function scrollPopular(dir) {
+        const el = document.getElementById('popularScroll');
+        if (el) el.scrollBy({ left: dir * 240, behavior: 'smooth' });
+    }
 
-		</form>
-	</main>
+    function surveyBuilder() {
+        return {
+            questions: [],
 
-	<script>
-		function scrollPopular(dir) {
-			const el = document.getElementById('popularScroll');
-			if (el) el.scrollBy({ left: dir * 224, behavior: 'smooth' });
-		}
+            addQuestion() {
+                this.questions.push({
+                    label: '',
+                    description: '',
+                    type: 'pick_one',
+                    required: false,
+                    choices: ['', '']
+                });
+            },
 
-		function surveyBuilder() {
-			return {
-				questions: [],
+            removeQuestion(index) {
+                this.questions.splice(index, 1);
+            },
 
-				addQuestion() {
-					this.questions.push({
-						label: '',
-						description: '',
-						type: 'pick_one',
-						required: false,
-						choices: ['', '']
-					});
-				},
+            addChoice(questionIndex) {
+                this.questions[questionIndex].choices.push('');
+            },
 
-				removeQuestion(index) {
-					this.questions.splice(index, 1);
-				},
+            removeChoice(questionIndex, choiceIndex) {
+                this.questions[questionIndex].choices.splice(choiceIndex, 1);
+            },
 
-				addChoice(questionIndex) {
-					this.questions[questionIndex].choices.push('');
-				},
+            needsChoices(type) {
+                return ['checkbox', 'pick_one'].includes(type);
+            },
 
-				removeChoice(questionIndex, choiceIndex) {
-					this.questions[questionIndex].choices.splice(choiceIndex, 1);
-				},
+            prepareSubmit(e) {
+                if (this.questions.length === 0) {
+                    e.preventDefault();
+                    alert('Please add at least one question.');
+                }
+            }
+        }
+    }
+</script>
 
-				needsChoices(type) {
-					return ['checkbox', 'pick_one'].includes(type);
-				},
-
-				prepareSubmit(e) {
-					if (this.questions.length === 0) {
-						e.preventDefault();
-						alert('Please add at least one question.');
-					}
-				}
-			}
-		}
-	</script>
-
-<footer class="site-footer">
-	Created by <a href="https://darnfinesoftware.com">Darn Fine Software</a> in Ohio
-	<span class="footer-sep">&middot;</span>
-	<a href="https://github.com/Darn-Fine-Software-LLC/surveys">View source</a>
-	<span class="footer-sep">&middot;</span>
-	<a href="mailto:hi@thatalexguy.dev">Contact us</a>
-</footer>
-
-</body>
-</html>
+<?php include __DIR__ . '/components/footer.php'; ?>

@@ -51,70 +51,44 @@ if (!$survey || $survey['expires_at'] < $now) {
 
 $success = $_SESSION['survey_submitted'] ?? false;
 unset($_SESSION['survey_submitted']);
-?>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <?php if ($not_found): ?>
-    <title>Survey Not Found — Darn Fine Surveys</title>
-    <meta name="description" content="This survey doesn't exist or has already expired.">
-    <meta property="og:title" content="Survey Not Found — Darn Fine Surveys">
-    <meta property="og:description" content="This survey doesn't exist or has already expired.">
-    <?php else: ?>
-    <title>Submit a response to our survey — Darn Fine Surveys</title>
-    <meta name="description" content="<?= htmlspecialchars($survey['title']) ?>">
-    <meta property="og:title" content="Submit a response to our survey — Darn Fine Surveys">
-    <meta property="og:description" content="<?= htmlspecialchars($survey['title']) ?>">
-    <?php endif; ?>
-    <meta property="og:type" content="website">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <script src="//unpkg.com/alpinejs" defer></script>
-    <link rel="stylesheet" type="text/css" href="/css/style.css">
-</head>
-<body>
 
-<header class="site-header">
-    <h1>Surveys Without The Bull</h1>
-    <p>Couple of clicks, you have a survey. It expires. Results are public — don't ask for anything you'd hide from your neighbor.</p>
-    <a href="/" class="btn btn-secondary" style="margin-top: 1rem">Create your own survey!</a>
-</header>
+$header_cta = true;
+include __DIR__ . '/../components/header.php';
+?>
 
 <main>
 
 <?php if ($not_found): ?>
 
-    <div class="form-intro">
+    <div class="not-found">
+        <div class="not-found-icon">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M6 6l16 16M22 6L6 22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
         <h2>Survey Not Found</h2>
         <p>This survey doesn't exist or has already expired and been deleted.</p>
-    </div>
-    <div class="submit-row">
-        <a href="/" class="btn btn-secondary">Create a New Survey</a>
+        <a href="/" class="btn btn-primary">Create a New Survey</a>
     </div>
 
 <?php else: ?>
 
-    <div class="survey-meta">
-        <div class="survey-meta-left">
-            <h2><?= htmlspecialchars($survey['title']) ?></h2>
-            <div class="survey-countdown"
-                 x-data="countdown(<?= $expires_at ?>)"
-                 x-init="init()">
-                Deletes in <strong x-text="formatted"></strong>
-            </div>
+    <div class="survey-hero">
+        <h1><?= htmlspecialchars($survey['title']) ?></h1>
+        <div class="survey-countdown"
+             x-data="countdown(<?= $expires_at ?>)"
+             x-init="init()">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M6 3v3.5l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Deletes in <strong x-text="formatted"></strong>
         </div>
-        <a href="/surveys/results.php?id=<?= htmlspecialchars($id) ?>" class="btn btn-secondary">View Results</a>
     </div>
 
     <div class="survey-disclaimer">
-        Make sure to copy this link, if you lose it, ya lose it. <br/>
-        Results are visible to anyone. Don't submit private or sensitive information.
+        <svg class="survey-disclaimer-icon" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zM8 5v3M8 10.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span>Results are visible to anyone — don't submit private or sensitive information. This link cannot be recovered if lost.</span>
     </div>
 
     <?php if ($success): ?>
     <div class="alert-success">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8l4 4 6-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Response submitted. Thanks!
     </div>
     <?php endif; ?>
@@ -129,7 +103,8 @@ unset($_SESSION['survey_submitted']);
              x-on:input="answered = true"
              x-on:mouseleave="if (answered) dimmed = true"
              x-on:mouseenter="dimmed = false"
-             :class="{ 'question-dimmed': dimmed }">
+             :class="{ 'question-dimmed': dimmed }"
+             style="animation-delay: <?= $qi * 0.05 ?>s">
 
             <div class="question-header">
                 <span class="question-number">Question <?= $qi + 1 ?></span>
@@ -207,10 +182,20 @@ unset($_SESSION['survey_submitted']);
         <?php endforeach; ?>
 
         <div class="submit-row">
-            <button type="submit" class="btn btn-primary">Submit Response &rarr;</button>
+            <button type="submit" class="btn btn-primary btn-lg">
+                Submit Response
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
         </div>
 
     </form>
+
+    <div style="text-align:center; margin-top:1.5rem;">
+        <a href="/surveys/results.php?id=<?= htmlspecialchars($id) ?>" class="btn btn-ghost btn-sm">
+            View Results
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+    </div>
 
 <?php endif; ?>
 
@@ -237,13 +222,4 @@ unset($_SESSION['survey_submitted']);
     }
 </script>
 
-<footer class="site-footer">
-    Created by <a href="https://darnfinesoftware.com">Darn Fine Software</a> in Ohio
-    <span class="footer-sep">&middot;</span>
-    <a href="https://github.com/Darn-Fine-Software-LLC/surveys">View source</a>
-    <span class="footer-sep">&middot;</span>
-    <a href="mailto:hi@thatalexguy.dev">Contact us</a>
-</footer>
-
-</body>
-</html>
+<?php include __DIR__ . '/../components/footer.php'; ?>

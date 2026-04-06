@@ -75,63 +75,49 @@ if (!$survey || $survey['expires_at'] < $now) {
 
     $expires_at = (int)$survey['expires_at'];
 }
-?>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <?php if ($not_found): ?>
-    <title>Survey Not Found — Darn Fine Surveys</title>
-    <meta name="description" content="This survey doesn't exist or has already expired.">
-    <meta property="og:title" content="Survey Not Found — Darn Fine Surveys">
-    <meta property="og:description" content="This survey doesn't exist or has already expired.">
-    <?php else: ?>
-    <title><?= htmlspecialchars($survey['title']) ?> — Results — Darn Fine Surveys</title>
-    <meta name="description" content="<?= htmlspecialchars($survey['title']) ?>">
-    <meta property="og:title" content="<?= htmlspecialchars($survey['title']) ?> — Results — Darn Fine Surveys">
-    <meta property="og:description" content="<?= htmlspecialchars($survey['title']) ?>">
-    <?php endif; ?>
-    <meta property="og:type" content="website">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <script src="//unpkg.com/alpinejs" defer></script>
-    <link rel="stylesheet" type="text/css" href="/css/style.css">
-</head>
-<body>
 
-<header class="site-header">
-    <h1>Surveys Without The Bull</h1>
-    <p>Couple of clicks, you have a survey. It expires. Results are public — don't ask for anything you'd hide from your neighbor.</p>
-    <a href="/" class="btn btn-secondary" style="margin-top: 1rem">Create your own survey!</a>
-</header>
+$header_cta = true;
+include __DIR__ . '/../components/header.php';
+?>
 
 <main>
 
 <?php if ($not_found): ?>
 
-    <div class="form-intro">
+    <div class="not-found">
+        <div class="not-found-icon">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M6 6l16 16M22 6L6 22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
         <h2>Survey Not Found</h2>
         <p>This survey doesn't exist or has already expired and been deleted.</p>
-    </div>
-    <div class="submit-row">
-        <a href="/" class="btn btn-secondary">Create a New Survey</a>
+        <a href="/" class="btn btn-primary">Create a New Survey</a>
     </div>
 
 <?php else: ?>
 
-    <div class="survey-meta">
+    <div class="survey-hero" style="padding-bottom:1rem">
+        <h1><?= htmlspecialchars($survey['title']) ?></h1>
+        <div class="survey-countdown"
+             x-data="countdown(<?= $expires_at ?>)"
+             x-init="init()">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M6 3v3.5l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Deletes in <strong x-text="formatted"></strong>
+        </div>
+    </div>
+
+    <div class="survey-meta-bar">
         <div class="survey-meta-left">
-            <h2><?= htmlspecialchars($survey['title']) ?></h2>
-            <div class="survey-countdown"
-                 x-data="countdown(<?= $expires_at ?>)"
-                 x-init="init()">
-                Deletes in <strong x-text="formatted"></strong>
-            </div>
+            <div class="response-count"><?= count($questions) ?> question<?= count($questions) != 1 ? 's' : '' ?></div>
         </div>
         <div class="survey-meta-actions">
-            <a href="/surveys?id=<?= htmlspecialchars($id) ?>" class="btn btn-secondary">Take Survey</a>
-            <a href="/surveys/json.php?id=<?= htmlspecialchars($id) ?>" class="btn btn-secondary">Download JSON</a>
+            <a href="/surveys?id=<?= htmlspecialchars($id) ?>" class="btn btn-secondary btn-sm">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 6.5S3 2 6.5 2 12 6.5 12 6.5 10 11 6.5 11 1 6.5 1 6.5z" stroke="currentColor" stroke-width="1.3"/><circle cx="6.5" cy="6.5" r="1.5" stroke="currentColor" stroke-width="1.3"/></svg>
+                Take Survey
+            </a>
+            <a href="/surveys/json.php?id=<?= htmlspecialchars($id) ?>" class="btn btn-secondary btn-sm">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 9V4a1 1 0 011-1h3l2 2h2a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-1H2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                JSON
+            </a>
         </div>
     </div>
 
@@ -140,7 +126,7 @@ if (!$survey || $survey['expires_at'] < $now) {
             <span class="insights-label">Darn Fine Insights</span>
             <template x-for="insight in insights" :key="insight.text">
                 <div class="insight-card">
-                    <svg class="insight-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <svg class="insight-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path d="M8 1l1.8 3.6 4 .6-2.9 2.8.7 4L8 10.1 4.4 12l.7-4L2.2 5.2l4-.6z" fill="currentColor"/>
                     </svg>
                     <p class="insight-text" x-text="insight.text"></p>
@@ -150,7 +136,7 @@ if (!$survey || $survey['expires_at'] < $now) {
     </div>
 
     <?php foreach ($questions as $qi => $q): ?>
-    <div class="question-block">
+    <div class="question-result-block" style="animation-delay: <?= $qi * 0.06 ?>s">
 
         <div class="question-header">
             <span class="question-number">Question <?= $qi + 1 ?></span>
@@ -238,13 +224,4 @@ if (!$survey || $survey['expires_at'] < $now) {
     }
 </script>
 
-<footer class="site-footer">
-    Created by <a href="https://darnfinesoftware.com">Darn Fine Software</a> in Ohio
-    <span class="footer-sep">&middot;</span>
-    <a href="https://github.com/Darn-Fine-Software-LLC/surveys">View source</a>
-    <span class="footer-sep">&middot;</span>
-    <a href="mailto:hi@thatalexguy.dev">Contact us</a>
-</footer>
-
-</body>
-</html>
+<?php include __DIR__ . '/../components/footer.php'; ?>

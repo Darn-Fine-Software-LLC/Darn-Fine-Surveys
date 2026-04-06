@@ -31,7 +31,7 @@ if (!$survey) {
     <title>Thanks for responding — Darn Fine Surveys</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="/css/style.css">
 </head>
 <body class="done-body">
@@ -41,13 +41,15 @@ if (!$survey) {
 <div class="done-wrap">
     <div class="done-card">
         <div class="done-icon">
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 11.5L8.5 16L18 6.5" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 12.5L9.5 17L19 7.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         </div>
         <h1 class="done-heading">Nice response!</h1>
+        <p class="done-subtext">Your answers have been recorded. Results are public — thank you for being part of it.</p>
         <a href="/surveys/results.php?id=<?= htmlspecialchars($id) ?>" class="btn btn-primary done-btn">
             View Results
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
     </div>
 </div>
@@ -65,14 +67,14 @@ if (!$survey) {
     window.addEventListener('resize', resize);
 
     const colors = [
-        '#c94a1a',
-        '#e8973a',
-        '#f5c060',
-        '#d46b30',
-        '#f5e0c8',
-        '#e8a050',
-        '#b83a12',
-        '#f0d090',
+        '#C4704A',
+        '#E8A87C',
+        '#F5C9A8',
+        '#D4956A',
+        '#E8D4C4',
+        '#C4A48A',
+        '#A85D3A',
+        '#F0D4B8',
     ];
 
     class Particle {
@@ -80,22 +82,22 @@ if (!$survey) {
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
             const angle = Math.random() * Math.PI * 2;
-            const speed = 5 + Math.random() * 14;
+            const speed = 4 + Math.random() * 12;
             this.x = cx + (Math.random() - 0.5) * 60;
             this.y = cy + (Math.random() - 0.5) * 30;
             this.vx = Math.cos(angle) * speed;
             this.vy = Math.sin(angle) * speed - 3;
-            this.w = 5 + Math.random() * 9;
-            this.h = 3 + Math.random() * 5;
+            this.w = 5 + Math.random() * 8;
+            this.h = 3 + Math.random() * 4;
             this.rot = Math.random() * Math.PI * 2;
-            this.rotV = (Math.random() - 0.5) * 0.3;
+            this.rotV = (Math.random() - 0.5) * 0.25;
             this.color = colors[Math.floor(Math.random() * colors.length)];
             this.alpha = 1;
             this.born = Date.now();
-            this.life = 2200 + Math.random() * 1800;
+            this.life = 2000 + Math.random() * 1600;
         }
         update() {
-            this.vy += 0.22;
+            this.vy += 0.2;
             this.vx *= 0.99;
             this.x += this.vx;
             this.y += this.vy;
@@ -115,7 +117,7 @@ if (!$survey) {
     }
 
     const particles = [];
-    for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < 180; i++) {
         particles.push(new Particle());
     }
 
