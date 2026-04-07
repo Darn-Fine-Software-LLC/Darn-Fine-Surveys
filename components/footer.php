@@ -20,6 +20,8 @@
             <span class="footer-dot">&middot;</span>
             <a href="https://github.com/Darn-Fine-Software-LLC/surveys">View source</a>
             <span class="footer-dot">&middot;</span>
+            <a href="/privacy.php">Privacy</a>
+            <span class="footer-dot">&middot;</span>
             <a href="mailto:hi@thatalexguy.dev">Contact</a>
         </nav>
     </div>
