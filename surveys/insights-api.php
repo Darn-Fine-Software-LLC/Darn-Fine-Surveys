@@ -43,7 +43,18 @@ foreach ($questions as &$q) {
 }
 unset($q);
 
+$tz_offset = (int)($_GET['tz_offset'] ?? 0);
+
 require __DIR__ . '/insights.php';
+
+// Wrap insight_time_of_day so it receives the caller's timezone offset.
+$generators = array_map(function ($g) use ($tz_offset) {
+    if ($g === 'insight_time_of_day') {
+        return fn($questions, $db, $n) => insight_time_of_day($questions, $db, $n, $tz_offset);
+    }
+    return $g;
+}, $generators);
+
 $insights = compute_insights($questions, $db, $submission_count, $generators);
 
 echo json_encode(array_map(fn($i) => ['text' => $i['text']], $insights));

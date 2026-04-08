@@ -200,7 +200,7 @@ include __DIR__ . '/../components/header.php';
         return {
             insights: [],
             load() {
-                fetch('/surveys/insights-api.php?id=' + encodeURIComponent(id))
+                fetch('/surveys/insights-api.php?id=' + encodeURIComponent(id) + '&tz_offset=' + new Date().getTimezoneOffset())
                     .then(r => r.json())
                     .then(data => { this.insights = data; })
                     .catch(() => {});

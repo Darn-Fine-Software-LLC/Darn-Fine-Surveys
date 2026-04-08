@@ -263,6 +263,63 @@ function insight_dominant_choice(array $questions, PDO $db, int $submission_coun
 
 $generators[] = 'insight_dominant_choice';
 
+// ── Generator: Time-of-day distribution ──────────────────────────────────
+//
+// Buckets submissions into morning (5–11), afternoon (12–17), and evening
+// (18–4). Fires when one bucket holds ≥50% of responses and is at least
+// 20 pp above the next-largest bucket, indicating a clear peak time.
+
+function insight_time_of_day(array $questions, PDO $db, int $submission_count, int $tz_offset_minutes = 0): array
+{
+    if ($submission_count < 5) return [];
+
+    // We need the survey_id — grab it from any question (all share one survey).
+    if (empty($questions)) return [];
+    $survey_id = $questions[0]['survey_id'];
+
+    $stmt = $db->prepare('SELECT submitted_at FROM submissions WHERE survey_id = ?');
+    $stmt->execute([$survey_id]);
+    $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    $buckets = ['morning' => 0, 'afternoon' => 0, 'evening' => 0];
+
+    // JS getTimezoneOffset() is minutes *behind* UTC (positive = west of UTC).
+    // Subtract it (in seconds) to shift the timestamp into local time, then
+    // use gmdate so the server's own timezone doesn't interfere.
+    $offset_seconds = $tz_offset_minutes * 60;
+
+    foreach ($rows as $ts) {
+        $hour = (int)gmdate('G', (int)$ts - $offset_seconds);
+        if ($hour >= 5 && $hour < 12) {
+            $buckets['morning']++;
+        } elseif ($hour >= 12 && $hour < 18) {
+            $buckets['afternoon']++;
+        } else {
+            $buckets['evening']++;
+        }
+    }
+
+    $total = array_sum($buckets);
+    if ($total < 5) return [];
+
+    arsort($buckets);
+    $labels    = ['morning' => 'morning (5–11am)', 'afternoon' => 'afternoon (12–5pm)', 'evening' => 'evening (6pm–4am)'];
+    $keys      = array_keys($buckets);
+    $top_key   = $keys[0];
+    $top_pct   = $buckets[$top_key] / $total;
+    $next_pct  = $buckets[$keys[1]] / $total;
+
+    if ($top_pct < 0.50 || $top_pct - $next_pct < 0.20) return [];
+
+    $rounded = round($top_pct * 100);
+    return [[
+        'text'  => "{$rounded}% of responses came in during the {$labels[$top_key]}.",
+        'score' => $top_pct - $next_pct,
+    ]];
+}
+
+$generators[] = 'insight_time_of_day';
+
 // ── Runner ────────────────────────────────────────────────────────────────
 //
 // Runs all registered generators, merges results, and returns the top
