@@ -1,8 +1,9 @@
 <?php
-$page_title       = 'API Docs — Darn Fine Surveys';
-$page_description = 'REST API documentation for Darn Fine Surveys. Create surveys programmatically with a simple JSON API.';
-$header_cta       = true;
-include __DIR__ . '/components/header.php';
+$page_title = "API Docs — Darn Fine Surveys";
+$page_description =
+    "REST API documentation for Darn Fine Surveys. Create surveys programmatically with a simple JSON API.";
+$header_cta = true;
+include __DIR__ . "/components/header.php";
 ?>
 
 <main>
@@ -27,7 +28,7 @@ include __DIR__ . '/components/header.php';
         <!-- Sidebar nav -->
         <nav class="docs-nav">
             <div class="docs-nav-label">Endpoints</div>
-            <a href="#post-surveys" class="docs-nav-link">POST /api/surveys</a>
+            <a href="#post-surveys" class="docs-nav-link">POST /api/surveys.php</a>
         </nav>
 
         <!-- Content -->
@@ -50,7 +51,7 @@ include __DIR__ . '/components/header.php';
             <div class="form-card docs-section" id="post-surveys">
                 <div class="docs-endpoint-header">
                     <span class="docs-method docs-method-post">POST</span>
-                    <span class="docs-path">/api/surveys</span>
+                    <span class="docs-path">/api/surveys.php</span>
                 </div>
                 <p class="docs-prose">Create a new survey. Returns the survey ID and URL.</p>
 
@@ -165,7 +166,7 @@ include __DIR__ . '/components/header.php';
                 <h3 class="docs-subsection-title">Example request</h3>
                 <div class="docs-code-block">
                     <span class="docs-code-label">curl</span>
-<pre>curl -X POST https://example.com/api/surveys \
+<pre>curl -X POST https://example.com/api/surveys.php \
   -H "Content-Type: application/json" \
   -d '{
   "title": "Team Lunch Preferences",
@@ -194,7 +195,7 @@ include __DIR__ . '/components/header.php';
                     <span class="docs-code-label">JSON</span>
 <pre>{
   "id": "a1b2c3d4e5",
-  "url": "https://example.com/surveys?id=a1b2c3d4e5"
+  "url": "https://surveys.darnfinesoftware.com/surveys.php?id=a1b2c3d4e5"
 }</pre>
                 </div>
 
@@ -426,4 +427,4 @@ include __DIR__ . '/components/header.php';
 }
 </style>
 
-<?php include __DIR__ . '/components/footer.php'; ?>
+<?php include __DIR__ . "/components/footer.php"; ?>
