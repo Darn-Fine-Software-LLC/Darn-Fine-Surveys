@@ -1,27 +1,39 @@
 <?php
 session_start();
 
-$id = trim($_GET['id'] ?? '');
+$id = trim($_GET["id"] ?? "");
 
-if ($id === '' || empty($_SESSION['survey_submitted'])) {
-    header('Location: /');
-    exit;
+if ($id === "" || empty($_SESSION["survey_submitted"])) {
+    header("Location: /");
+    exit();
 }
 
-unset($_SESSION['survey_submitted']);
+unset($_SESSION["survey_submitted"]);
 
-$db_path = __DIR__ . '/../database/database.sqlite';
-$db = new PDO('sqlite:' . $db_path);
+$db_path = __DIR__ . "/../database/database.sqlite";
+$db = new PDO("sqlite:" . $db_path);
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-$stmt = $db->prepare('SELECT * FROM surveys WHERE id = ?');
+$stmt = $db->prepare("SELECT * FROM surveys WHERE id = ?");
 $stmt->execute([$id]);
 $survey = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$survey) {
-    header('Location: /');
-    exit;
+    header("Location: /");
+    exit();
 }
+
+$more_surveys = $db->prepare('
+    SELECT s.id, s.title,
+           (SELECT COUNT(*) FROM submissions sub WHERE sub.survey_id = s.id) AS response_count,
+           (SELECT COUNT(*) FROM questions q WHERE q.survey_id = s.id) AS question_count
+    FROM surveys s
+    WHERE s.expires_at > ? AND s.show_on_home = 1 AND s.id != ?
+    ORDER BY RANDOM()
+    LIMIT 3
+');
+$more_surveys->execute([time(), $id]);
+$more_surveys = $more_surveys->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -47,11 +59,34 @@ if (!$survey) {
         </div>
         <h1 class="done-heading">Nice response!</h1>
         <p class="done-subtext">Your answers have been recorded. Results are public — thank you for being part of it.</p>
-        <a href="/surveys/results.php?id=<?= htmlspecialchars($id) ?>" class="btn btn-primary done-btn">
+        <a href="/surveys/results.php?id=<?= htmlspecialchars(
+            $id,
+        ) ?>" class="btn btn-primary done-btn">
             View Results
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
     </div>
+
+    <?php if (!empty($more_surveys)): ?>
+    <div class="more-surveys" id="more-surveys">
+        <p class="more-surveys-label">Take Another Survey!</p>
+        <div class="more-surveys-list">
+            <?php foreach ($more_surveys as $s): ?>
+            <a href="/surveys?id=<?= htmlspecialchars(
+                $s["id"],
+            ) ?>" target="_blank" rel="noopener" class="more-survey-item">
+                <span class="more-survey-title"><?= htmlspecialchars(
+                    $s["title"],
+                ) ?></span>
+                <span class="more-survey-count"><?= (int) $s[
+                    "question_count"
+                ] ?> questions</span>
+                <svg class="more-survey-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <script>
@@ -135,6 +170,11 @@ if (!$survey) {
         }
     }
     animate();
+
+    setTimeout(function () {
+        const more = document.getElementById('more-surveys');
+        if (more) more.classList.add('more-surveys-visible');
+    }, 600);
 })();
 </script>
 
